@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scroll Video — Apple-style (Optimized)</title>
+  <meta name="description" content="Canvas-анимация по скроллу с lazy preload и WebP кадрами." />
+  <style>
+    :root { --bg:#0b1020; --text:#e6ecff; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; padding:0; background:var(--bg); color:var(--text); }
+    .section { min-height:100vh; display:flex; align-items:center; justify-content:center; padding: 24px; }
+    .lead { max-width: 920px; text-align:center; line-height:1.6; opacity:.95; }
+    .pin { position:relative; height: 220vh; }
+    .stage { position: sticky; top:0; height:100vh; width:100vw; display:grid; place-items:center; background:#030712; }
+    canvas { width:100vw; height:100vh; display:block; background:#000; }
+    .progress { position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; }
+    .bar { width:min(520px,80vw); height:8px; border-radius:999px; background:rgba(255,255,255,.12); overflow:hidden; }
+    .fill { height:100%; width:0%; background:linear-gradient(135deg,#7c3aed,#22d3ee); transition:width .15s linear; }
+    .hint { margin-top:12px; font-size:14px; opacity:.7; }
+    .hidden { opacity:0; transition: opacity .35s ease; }
+    .btn { color:#0b1020; background: linear-gradient(135deg,#7c3aed,#22d3ee); padding:12px 16px; border-radius: 12px; font-weight:700; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <section class="section">
+    <div class="lead">
+      <h1 style="margin:0 0 8px;font-size:clamp(28px,5vw,54px);line-height:1.05;">Apple‑style scroll video</h1>
+      <p>Оптимизировано: WebP кадры, <b>lazy</b> догрузка, прогресс бар, фиксация canvas и остановка на последнем кадре.</p>
+      <p><a class="btn" href="#demo">Смотреть демо ↓</a></p>
+    </div>
+  </section>
+
+  <section id="demo" class="pin">
+    <div class="stage">
+      <canvas id="hero-canvas"></canvas>
+      <div id="progress" class="progress">
+        <div class="bar"><div id="fill" class="fill"></div></div>
+        <div class="hint">Загружаю кадры…</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="lead">
+      <h2 style="margin:0 0 8px;">Дальше контент</h2>
+      <p>Canvas адаптивно вписывает изображения (contain) и центрируется. Кадров: <b>200</b>.</p>
+      <p>Хотите ещё плавнее — экспортируйте больше кадров (например, 800–1200) и замените `manifest.json`.</p>
+    </div>
+  </section>
+  <div style="height:120vh;"></div>
+
+  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  const progress = document.getElementById('progress');
+  const fill = document.getElementById('fill');
+
+  const fit = (img) => {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    canvas.width = vw; canvas.height = vh;
+    const iw = img.width, ih = img.height;
+    const scale = Math.min(vw/iw, vh/ih);
+    const dw = iw*scale, dh = ih*scale, dx = (vw-dw)/2, dy = (vh-dh)/2;
+    canvas._fit = {dw, dh, dx, dy};
+  };
+
+  const draw = (img) => {
+    if (!canvas._fit) fit(img);
+    const {dw, dh, dx, dy} = canvas._fit;
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    ctx.drawImage(img, dx, dy, dw, dh);
+  };
+
+  // Load manifest (generated server-side)
+  fetch('public/animation/manifest.json').then(r => r.json()).then(manifest => {
+    const files = manifest.frames;
+    const count = files.length;
+    const images = new Array(count);
+    let loaded = 0;
+
+    // Eager-load первые ~20%, остальное — лениво по мере необходимости
+    const eager = Math.max(20, Math.floor(count * 0.2));
+
+    const loadImg = (i) => new Promise(res => {
+      const img = new Image();
+      img.src = files[i];
+      img.onload = () => { images[i] = img; loaded++; fill.style.width = (loaded/count*100).toFixed(1)+'%'; res(); if (i===0){ fit(img); draw(img); } };
+    });
+
+    (async () => {
+      // Eager
+      for (let i=0;i<Math.min(eager,count);i++) await loadImg(i);
+      progress.classList.add('hidden');
+
+      // Lazy prefetch rest (без блокировки)
+      setTimeout(async () => {
+        for (let i=eager;i<count;i++) loadImg(i);
+      }, 0);
+
+      const state = { frame: 0 };
+      const render = () => {
+        const idx = Math.min(Math.round(state.frame), count-1);
+        const img = images[idx];
+        if (img) draw(img);
+      };
+
+      // Scroll-driven animation
+      gsap.to(state, {
+        frame: count-1,
+        ease: "none",
+        snap: "frame",
+        scrollTrigger: {
+          trigger: ".pin",
+          start: "top top",
+          end: "bottom bottom",
+          scrub: true,
+          pin: ".stage"
+        },
+        onUpdate: render
+      });
+
+      window.addEventListener('resize', () => images[0] && draw(images[Math.min(Math.round(state.frame), count-1)]));
+    })();
+  });
+  </script>
+</body>
+</html>

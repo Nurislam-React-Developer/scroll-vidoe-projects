@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nurislam — Frontend Portfolio</title>
+  <meta name="description" content="Портфолио фронтенд‑разработчика Nurislam: проекты, GitHub и контакты." />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #11162a;
+      --text: #e6ecff;
+      --muted: #94a3b8;
+      --acc1: #7c3aed;
+      --acc2: #22d3ee;
+      --ring: rgba(124, 58, 237, 0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    .container { width: min(1120px, 92vw); margin: 0 auto; }
+    header { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(12px); background: linear-gradient(180deg, rgba(11,16,32,.85), rgba(11,16,32,.6) 60%, transparent); border-bottom: 1px solid #1e2a44; }
+    nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.4px; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background: linear-gradient(135deg, var(--acc1), var(--acc2)); box-shadow: 0 0 24px var(--ring); }
+    .navlinks a { padding: 8px 12px; border-radius: 10px; opacity:.9 }
+    .navlinks a:hover { background: #18213a; opacity:1 }
+    .btn { display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius: 12px; background: linear-gradient(135deg, var(--acc1), var(--acc2)); color:#0b1020; font-weight:700; box-shadow: 0 10px 30px var(--ring); }
+    .btn:hover { transform: translateY(-1px); }
+    /* Hero */
+    .hero { position: relative; padding: 80px 0 60px; overflow: hidden; }
+    .glow { position:absolute; inset:-20%; background: radial-gradient( circle at 70% -10%, rgba(124,58,237,.35), transparent 40% ), radial-gradient( circle at 0% 100%, rgba(34,211,238,.25), transparent 45% ); filter: blur(30px); z-index: 0; }
+    .hero-inner { position: relative; z-index: 1; display:grid; gap:28px; grid-template-columns: 1.1fr .9fr; align-items:center; }
+    .title { font-size: clamp(32px, 6vw, 56px); line-height: 1.05; margin:0; background: linear-gradient(135deg, #fff, #c7d2fe 40%, #93c5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .subtitle { color: var(--muted); font-size: clamp(14px, 1.8vw, 18px); }
+    .hero-card { background: linear-gradient(180deg, #0d1428, #0b1020); border:1px solid #1e2a44; padding:18px; border-radius: 18px; box-shadow: 0 8px 28px rgba(2,8,23,.4); }
+    .badges { display:flex; flex-wrap: wrap; gap:10px; margin-top: 12px; }
+    .badge { padding:8px 10px; border-radius: 12px; border:1px solid #1f2a44; background:#0f1832; color:#cbd5e1; font-size: 12px; }
+    /* Scroll video */
+    .pin-wrap { height: 140vh; position: relative; }
+    .pinned { position: sticky; top: 72px; border-radius: 22px; overflow: hidden; border:1px solid #223157; background:#000; box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+    .pinned video { width: 100%; height: auto; display:block; }
+    .video-caption { padding: 14px 16px; border-top:1px solid #1c2a52; background: #0c142c; color: #c7d2fe; font-size: 14px; }
+    /* Gallery */
+    .section { padding: 64px 0; }
+    .sec-title { font-size: clamp(22px, 3.4vw, 32px); margin: 0 0 16px; }
+    .grid { display:grid; gap:16px; grid-template-columns: repeat(12, 1fr); }
+    .card { grid-column: span 6; background: var(--card); border:1px solid #1e2a44; border-radius:18px; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(2,8,23,.5); }
+    .card img { aspect-ratio: 16 / 9; object-fit: cover; }
+    .card .meta { padding: 12px; color: var(--muted); font-size: 14px; border-top: 1px solid #1b2746; }
+    .full-12 { grid-column: span 12; }
+    /* Lightbox */
+    .lightbox { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(6,10,24,.9); z-index: 50; }
+    .lightbox.open { display:flex; }
+    .lightbox img { max-width: 92vw; max-height: 86vh; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
+    /* Footer */
+    footer { padding: 50px 0 70px; color: var(--muted); border-top: 1px solid #1e2a44; }
+    .row { display:flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+    /* Responsive */
+    @media (max-width: 960px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .card { grid-column: span 12; }
+      .pin-wrap { height: 120vh; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="brand"><span class="dot"></span> Nurislam • Frontend</div>
+        <div class="navlinks">
+          <a href="#video">Demo</a>
+          <a href="#projects">Проекты</a>
+          <a href="#contacts">Контакты</a>
+        </div>
+        <a class="btn" href="#contacts">Связаться</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="glow"></div>
+    <div class="container hero-inner">
+      <div>
+        <h1 class="title">Создаю быстрые и аккуратные интерфейсы на React / Next.js</h1>
+        <p class="subtitle">Опыт с Redux Toolkit, React Hook Form, Tailwind / SCSS, интеграции с REST API. Люблю чистую архитектуру и понятный UI.</p>
+        <div class="badges">
+          <span class="badge">JavaScript</span>
+          <span class="badge">TypeScript</span>
+          <span class="badge">React</span>
+          <span class="badge">Next.js</span>
+          <span class="badge">Redux Toolkit</span>
+          <span class="badge">Firebase</span>
+          <span class="badge">GitHub</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="pin-wrap" id="video">
+          <div class="pinned">
+            <!-- Поместите файл assets/video/intro.mp4 -->
+            <video id="scrollVideo" src="assets/video/intro.mp4" muted playsinline preload="metadata" poster="assets/img/github_1.png"></video>
+            <div class="video-caption">Демо: видео реагирует на скролл страницы (scrub-проигрывание)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects" class="section">
+    <div class="container">
+      <h2 class="sec-title">Скриншоты из GitHub</h2>
+      <div class="grid">
+        
+        <article class="card">
+          <img src="assets/img/github_1.png" alt="GitHub Screenshot 1" data-full="assets/img/github_1.png" />
+          <div class="meta">Скриншот #1 из профиля GitHub</div>
+        </article>
+        
+        <article class="card">
+          <img src="assets/img/github_2.png" alt="GitHub Screenshot 2" data-full="assets/img/github_2.png" />
+          <div class="meta">Скриншот #2 из профиля GitHub</div>
+        </article>
+        
+        <article class="card">
+          <img src="assets/img/github_3.png" alt="GitHub Screenshot 3" data-full="assets/img/github_3.png" />
+          <div class="meta">Скриншот #3 из профиля GitHub</div>
+        </article>
+        
+        <article class="card">
+          <img src="assets/img/github_4.png" alt="GitHub Screenshot 4" data-full="assets/img/github_4.png" />
+          <div class="meta">Скриншот #4 из профиля GitHub</div>
+        </article>
+        
+        <article class="card full-12">
+          <div class="meta">Больше проектов: <a href="https://github.com/Nurislam-React-Developer" target="_blank" rel="noopener">github.com/Nurislam-React-Developer</a></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="contacts" class="section">
+    <div class="container">
+      <h2 class="sec-title">Контакты</h2>
+      <p class="subtitle">Открыт к удалёнке и гибкому графику. Пишите — отвечу быстро.</p>
+      <div class="badges">
+        <a class="btn" href="https://t.me/Nurs_06A" target="_blank" rel="noopener">Telegram</a>
+        <a class="btn" href="mailto:nurislam.abdimalikov@icloud.com">Email</a>
+        <a class="btn" href="https://github.com/Nurislam-React-Developer" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container row">
+      <div>© 2025 Nurislam. Сайт выполнен на HTML + CSS + JS.</div>
+      <div>Основано на данных GitHub и личных проектах.</div>
+    </div>
+  </footer>
+
+  <div class="lightbox" id="lightbox"><img alt="preview" /></div>
+
+  <script>
+    // Smooth anchor scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href').slice(1);
+        const el = document.getElementById(id);
+        if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+    });
+
+    // Scroll-driven video scrub
+    (function() {
+      const container = document.querySelector('.pin-wrap');
+      const video = document.getElementById('scrollVideo');
+      if (!container || !video) return;
+
+      let duration = 0;
+      video.addEventListener('loadedmetadata', () => { duration = video.duration || 0; });
+
+      const onScroll = () => {
+        const rect = container.getBoundingClientRect();
+        const vh = window.innerHeight || 1;
+        const start = vh * 0.1;                 // когда начинается
+        const end = rect.height - vh * 0.3;     // когда заканчивается
+        const progress = Math.min(1, Math.max(0, (start - rect.top) / end));
+        if (duration > 0) {
+          video.currentTime = progress * duration;
+        }
+      };
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll);
+      onScroll();
+    })();
+
+    // Lightbox for gallery
+    (function() {
+      const lb = document.getElementById('lightbox');
+      const img = lb.querySelector('img');
+      document.querySelectorAll('.card img').forEach(el => {
+        el.addEventListener('click', () => {
+          img.src = el.dataset.full || el.src;
+          lb.classList.add('open');
+        });
+      });
+      lb.addEventListener('click', () => lb.classList.remove('open'));
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') lb.classList.remove('open'); });
+    })();
+  </script>
+</body>
+</html>

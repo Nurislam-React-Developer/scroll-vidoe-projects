@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scroll Video — Apple‑style Canvas</title>
+  <meta name="description" content="Эффект видео по скроллу: фиксированный canvas с покадровой анимацией." />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --text: #e5ecff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:var(--bg); color:var(--text); height:100%; }
+    .section { min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 24px; }
+    .hero { position: relative; }
+    /* Sticky canvas wrapper */
+    .pin { position:relative; height: 200vh; }
+    .pin .stage { position: sticky; top: 0; height: 100vh; width: 100vw; display:grid; place-items:center; background: radial-gradient(1600px 600px at 50% -10%, rgba(124,58,237,.18), transparent 60%), radial-gradient(1200px 700px at 0% 100%, rgba(34,211,238,.14), transparent 65%); }
+    canvas { width: 100vw; height: 100vh; display:block; background: #000; }
+    .lead { max-width: 920px; margin: 0 auto; text-align:center; line-height:1.6; opacity:.9; }
+    .spacer { height: 120vh; }
+    a.btn { color:#0b1020; background: linear-gradient(135deg,#7c3aed,#22d3ee); padding:12px 16px; border-radius: 12px; font-weight: 700; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <!-- Intro -->
+  <section class="section">
+    <div class="lead">
+      <h1 style="margin-top:0;font-size:clamp(28px,5vw,54px);line-height:1.05;">Эффект “видео по скроллу”</h1>
+      <p>Фиксированный <code>canvas</code> на всю ширину/высоту экрана. По мере прокрутки страницы — покадровая анимация (как у Apple).</p>
+      <p><a class="btn" href="#demo">Скролль вниз ↓</a></p>
+    </div>
+  </section>
+
+  <!-- Sticky Canvas Demo -->
+  <section id="demo" class="pin">
+    <div class="stage">
+      <canvas id="hero-canvas"></canvas>
+    </div>
+  </section>
+
+  <!-- Content after animation (делаем пространство для демонстрации эффекта) -->
+  <section class="section">
+    <div class="lead">
+      <h2 style="margin:0 0 12px;">Дальше контент страницы</h2>
+      <p>Canvas корректно масштабируется на разных экранах, сохраняя пропорции кадров.</p>
+      <p>Кадров: <strong>300</strong>. Можно заменить на свои через ffmpeg в <code>public/animation</code>.</p>
+    </div>
+  </section>
+  <div class="spacer"></div>
+
+  <!-- GSAP + ScrollTrigger (CDN) -->
+  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <script>
+    // Регистрация плагина
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Параметры
+    const frameCount = 300;
+    const currentFrame = index => `public/animation/${String(index).padStart(4,'0')}.jpg`;
+
+    // Прелоад изображений
+    const images = [];
+    let loaded = 0;
+
+    const canvas = document.getElementById('hero-canvas');
+    const context = canvas.getContext('2d');
+
+    // Размеры для адаптивного рендера (с сохранением пропорций)
+    function setCanvasSize(img) {
+      // Целевая площадь — весь вьюпорт
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      canvas.width  = vw;
+      canvas.height = vh;
+
+      // Рассчёт вписывания (contain) с сохранением пропорций и центрированием
+      const iw = img.width;
+      const ih = img.height;
+      const scale = Math.min(vw / iw, vh / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const dx = (vw - dw) / 2;
+      const dy = (vh - dh) / 2;
+
+      // Сохраняем для перерисовки
+      canvas._fit = { iw, ih, dw, dh, dx, dy };
+    }
+
+    function drawImage(img) {
+      if (!canvas._fit) setCanvasSize(img);
+      const {dw, dh, dx, dy} = canvas._fit;
+      context.clearRect(0,0,canvas.width, canvas.height);
+      context.drawImage(img, dx, dy, dw, dh);
+    }
+
+    // Загружаем все кадры
+    for (let i = 1; i <= frameCount; i++) {
+      const img = new Image();
+      img.src = currentFrame(i);
+      img.onload = () => {
+        loaded++;
+        if (i === 1) {
+          setCanvasSize(img);
+          drawImage(img);
+        }
+      };
+      images.push(img);
+    }
+
+    // Актуализация размеров при ресайзе
+    window.addEventListener('resize', () => {
+      const first = images[0];
+      if (first && first.complete) {
+        setCanvasSize(first);
+        // Перерисуем текущий кадр
+        drawImage(images[Math.min(Math.floor(animation.frame), frameCount-1)]);
+      }
+    });
+
+    // Счётчик кадров, управляемый GSAP
+    const animation = { frame: 1 };
+
+    const tl = gsap.to(animation, {
+      frame: frameCount - 1,
+      snap: "frame",
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".pin",
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+        pin: ".stage"
+      },
+      onUpdate: render
+    });
+
+    function render() {
+      const idx = Math.min(Math.floor(animation.frame), frameCount - 1);
+      const img = images[idx];
+      if (img && img.complete) drawImage(img);
+    }
+  </script>
+</body>
+</html>
